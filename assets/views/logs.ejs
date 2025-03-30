@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html>
+
+<% include partials/head.ejs %>
+
+<body>
+    <script>
+        gtag('event', 'screen_view', {
+            'screen_name': 'logs',
+            'app_name': 'L3MON'
+        });
+    </script>
+    <div class="ui container">
+        <% include partials/header.ejs %>
+        <div class="ui segment">
+            <div class="logs">
+                <% if (logs && logs.length > 0) { %>
+                    <% logs.forEach((log) => { %>
+                        <article class="logitm <%= log.type %>" aria-label="Log entry">
+                            <time datetime="<%= new Date(log.time).toISOString() %>">
+                                <%= new Date(log.time).toLocaleString('en-GB', { timeZone: 'UTC' }) %>
+                            </time>
+                            => <strong><%= log.type %></strong> | <%= log.message %>
+                        </article>
+                    <% }) %>
+                <% } else { %>
+                    <p>No logs available at the moment.</p>
+                <% } %>
+            </div>
+        </div>
+    </div>
+    <% include partials/footer.ejs %>
+</body>
+
+</html>
