@@ -3,7 +3,8 @@ const
     routes = express.Router(),
     cookieParser = require('cookie-parser'),
     bodyParser = require('body-parser'),
-    crypto = require('crypto');
+    crypto = require('crypto'),
+    csrf = require('csurf'); // Añadida la importación de csurf
 
 let CONST = global.CONST;
 let db = global.db;
@@ -15,6 +16,9 @@ let apkBuilder = global.apkBuilder;
 app.use(cookieParser());
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
+
+// Usar el middleware de csurf en todas las rutas
+routes.use(csrf());
 
 function isAllowed(req, res, next) {
     let cookies = req.cookies;
@@ -39,7 +43,7 @@ routes.get('/', isAllowed, (req, res) => {
 
 
 routes.get('/login', (req, res) => {
-    res.render('login');
+    res.render('login', { csrfToken: req.csrfToken() }); // Pasando csrfToken a la plantilla
 });
 
 routes.post('/login', (req, res) => {
